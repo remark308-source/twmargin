@@ -2,8 +2,8 @@ name: Update TW Margin Report
 
 on:
   schedule:
-    # 台北交易日收盤後自動更新（台北 18:30 ≈ UTC 10:30；週一至週五）
-    - cron: "30 10 * * 1-5"
+    # 台北時間（UTC+8）每週一至週五 晚上 21:00 自動更新（= UTC 13:00）
+    - cron: "0 13 * * 1-5"
   workflow_dispatch: {}   # 允許手動在 Actions 頁面點 Run workflow
 
 # 需要寫回 repo 的權限（用 GITHUB_TOKEN 推送 index.html / chart_data_tw.json）
