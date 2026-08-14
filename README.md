@@ -7,7 +7,7 @@
 
 https://remark308-source.github.io/twmargin/
 
-> 線上為靜態快照；最新資料請見下方「本地更新」章節，重新產生後推送即可。
+> 線上版由 **GitHub Actions 每日台北收盤後自動更新**（週一至週五 UTC 10:30 ≈ 台北 18:30），無須手動推送。想立即刷新可按 Actions 頁面 **Run workflow** 手動觸發。
 
 ## 讀圖方法
 
@@ -26,6 +26,29 @@ https://remark308-source.github.io/twmargin/
 
 融資淨買入 (日) = 當日融資餘額 − 前日融資餘額。
 
+## 自動更新（GitHub Actions）
+
+倉庫已內建 `.github/workflows/update.yml`：
+
+- **排程**：台北交易日收盤後（週一至週五 UTC 10:30 ≈ 台北 18:30）自動跑。
+- **流程**：`python build_tw.py`（增量只抓新交易日）→ `python gen_html_tw.py`（輸出 `index.html`）→ 自動 commit & push。
+- **手動**：在 Actions 頁面點 **Run workflow** 可立即觸發。
+- 首次執行會偵測到舊 `chart_data_tw.json` 缺 `tpex_balance_raw`，自動做一次**全量重建**建立增量基礎，之後皆為輕量增量。
+
+### 關於「櫃買」資料來源（重要）
+
+櫃買融資餘額**只能**來自 TPEx 官網（FinMind 的 OTC 欄位會被忽略、回傳的是 TSE+OTC 合併值）。
+TPEx 官網對**雲端 IP（如 GitHub 託管 runner）可能會封鎖**，導致雲端自動更新時櫃買序列停在舊值。
+若發現線上「櫃買 MA20」不再跟著更新，請改用**自託管 runner**（跑在你家網路，TPEx 必達）：
+
+```bash
+# 1) 下載並設定 runner（一次）：Actions → Runners → New runner，照頁面指令執行
+# 2) 把 update.yml 的 runs-on 改為：
+#       runs-on: self-hosted
+# 3) 啟動 runner（保持開著，排程會自動喚醒它）
+./run.sh
+```
+
 ## 本地更新（開發者）
 
 僅需 Python 3.13 + 網路，標準庫即可（urllib / ssl / concurrent.futures），無第三方套件相依。
@@ -35,9 +58,10 @@ https://remark308-source.github.io/twmargin/
 python build_tw.py && python gen_html_tw.py
 ```
 
-`build_tw.py` 重新抓取並產生 `chart_data_tw.json`；`gen_html_tw.py` 產生 `index.html`。
+`build_tw.py` 預設**增量**模式（抓新交易日追加）；加 `--full` 可強制全量重建。
+`gen_html_tw.py` 預設輸出帶日期檔名；設 `OUTPUT_HTML=index.html` 可覆寫為 Pages 用的 `index.html`。
 
-推送後 GitHub Pages 即更新：
+本地產出後推送，GitHub Pages 即更新：
 
 ```bash
 git add -A

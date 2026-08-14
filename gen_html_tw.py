@@ -14,7 +14,8 @@ import base64
 import datetime as dt
 
 TODAY = dt.date.today().strftime("%Y%m%d")
-HTML_FILE = f"台股融资净买入MA20叠加-{TODAY}.html"
+# 預設輸出帶日期的檔名（本機用）；Actions 透過 OUTPUT_HTML 環境變數指定 index.html
+HTML_FILE = os.environ.get("OUTPUT_HTML") or f"台股融资净买入MA20叠加-{TODAY}.html"
 
 # 1. 读 chart_data_tw.json
 with open("chart_data_tw.json", encoding="utf-8") as f:
