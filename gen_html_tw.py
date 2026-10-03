@@ -79,6 +79,15 @@ def last_n_nonnull(arr, n=5):
                 break
     return list(reversed(out))
 
+def last_val(arr):
+    for v in reversed(arr):
+        if v is not None:
+            return v
+    return None
+
+twse_idx_last = last_val(twse_idx)
+tpex_idx_last = last_val(tpex_idx)
+
 twse_recent = last_n_nonnull(twse_nb, 5)
 tpex_recent = last_n_nonnull(tpex_nb, 5)
 
@@ -142,9 +151,9 @@ HTML = r"""<!DOCTYPE html>
 
 <div class="card">
   <div class="note">
-    <b>讀圖方法：</b>上圖——上市加權 / 櫃買指數以 2018-01-02 為基準歸一化(=100) 疊加，
+    <b>讀圖方法：</b>上圖——上市加權（左軸）與櫃買指數（右軸）以實際點位疊加，
     <span class="tag blue">橙線 = 上市融資淨買入 MA20</span>、
-    <span class="tag red">桃紅線 = 櫃買融資淨買入 MA20</span>，均為右軸(億元 TWD)。
+    <span class="tag red">桃紅線 = 櫃買融資淨買入 MA20</span>，均為外右軸(億元 TWD)。
     上市 MA20 附 0 參考線。<br/>
     下圖——兩市每日融資淨買入柱狀(紅=淨買入/加槓桿，綠=淨償還/去槓桿) + 各自 MA20 折線。<br/>
     <b>資料口徑：</b>上市/櫃買指數與兩市大盤融資餘額均取自盤後資訊，
@@ -166,7 +175,7 @@ HTML = r"""<!DOCTYPE html>
 <div class="card"><div id="chart1"></div></div>
 <div class="card"><div id="chart2"></div></div>
 
-<div class="lastdata">資料截止：__LAST_DATE__ ｜ 上市 MA20 = __TWSE_MA__ 億 TWD ｜ 櫃買 MA20 = __TPEX_MA__ 億 TWD</div>
+<div class="lastdata">資料截止：__LAST_DATE__ ｜ 加權指數 __TWSE_IDX__ 點 ｜ 櫃買指數 __TPEX_IDX__ 點 ｜ 上市 MA20 = __TWSE_MA__ 億 TWD ｜ 櫃買 MA20 = __TPEX_MA__ 億 TWD</div>
 
 <!--ECHARTS_INLINE-->
 <script>
@@ -178,27 +187,37 @@ const allDates = D.dates;
 
 // ===== 上圖：兩市指數歸一化 + 兩條 MA20 =====
 const option1 = {
-  title: { text: '上市/櫃買 加權指數（歸一化 2018-01-02=100） × 融資淨買入 MA20（右軸，億 TWD）',
+  title: { text: '上市/櫃買 加權指數（實際點位，上市左軸／櫃買右軸） × 融資淨買入 MA20（外右軸，億 TWD）',
     left: 10, top: 6, textStyle: { fontSize: 14, fontWeight: 600 } },
   tooltip: { trigger: 'axis', axisPointer: { type: 'cross' },
     formatter: function(params) {
       let s = params[0].axisValue + '<br/>';
       params.forEach(p => {
-        const v = p.seriesName.indexOf('MA20') >= 0 ? (p.value==null?'-':p.value.toFixed(2)+' 億') :
-                   (p.value==null?'-':p.value.toFixed(2));
+        let v;
+        if (p.seriesName.indexOf('MA20') >= 0) {
+          v = p.value==null ? '-' : p.value.toFixed(2) + ' 億';
+        } else if (p.seriesName.indexOf('TAIEX') >= 0 || p.seriesName.indexOf('TPEx') >= 0) {
+          v = p.value==null ? '-' : Number(p.value).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' 點';
+        } else {
+          v = p.value==null ? '-' : p.value.toFixed(2);
+        }
         s += p.marker + p.seriesName + ': <b>' + v + '</b><br/>';
       });
       return s;
     }
   },
   legend: { top: 32, type:'scroll', data: ['上市加權 (TAIEX)','櫃買指數 (TPEx)','上市融資 MA20','櫃買融資 MA20'] },
-  grid: { left: 60, right: 70, top: 70, bottom: 60 },
+  grid: { left: 70, right: 130, top: 70, bottom: 60 },
   xAxis: { type: 'category', data: allDates, axisLabel: { hideOverlap: true }, boundaryGap: false },
   yAxis: [
-    { type: 'value', name: '指數(歸一化)', position: 'left',  scale: true,
-      axisLabel: { color: '#374151' } },
-    { type: 'value', name: '融資淨買入(億)', position: 'right', scale: true,
-      axisLabel: { color: '#b45309' } }
+    { type: 'value', name: '上市加權(點)', position: 'left',  scale: true,
+      axisLabel: { color: '#2563eb',
+        formatter: v => v.toLocaleString('en-US') } },
+    { type: 'value', name: '櫃買指數(點)', position: 'right', scale: true,
+      axisLabel: { color: '#9333ea' } },
+    { type: 'value', name: '融資淨買入(億)', position: 'right', offset: 55, scale: true,
+      axisLabel: { color: '#b45309' },
+      splitLine: { show: false } }
   ],
   dataZoom: [
     { type: 'inside', xAxisIndex: 0 },
@@ -207,11 +226,11 @@ const option1 = {
   series: [
     { name:'上市加權 (TAIEX)', type:'line', yAxisIndex:0, smooth:true, showSymbol:false,
       lineStyle:{ width:2, color:'#2563eb' },
-      data: D.twse_idx_norm },
-    { name:'櫃買指數 (TPEx)', type:'line', yAxisIndex:0, smooth:true, showSymbol:false,
+      data: D.twse_idx },
+    { name:'櫃買指數 (TPEx)', type:'line', yAxisIndex:1, smooth:true, showSymbol:false,
       lineStyle:{ width:2, color:'#9333ea' },
-      data: D.tpex_idx_norm },
-    { name:'上市融資 MA20', type:'line', yAxisIndex:1, smooth:true, showSymbol:false,
+      data: D.tpex_idx },
+    { name:'上市融資 MA20', type:'line', yAxisIndex:2, smooth:true, showSymbol:false,
       lineStyle:{ width:2, color:'#f59e0b' },
       data: D.twse_ma,
       markLine:{ silent:true, symbol:'none', label:{ formatter: v => v.name + ' ' + (v.value||0).toFixed(1) },
@@ -220,7 +239,7 @@ const option1 = {
         ]
       }
     },
-    { name:'櫃買融資 MA20', type:'line', yAxisIndex:1, smooth:true, showSymbol:false,
+    { name:'櫃買融資 MA20', type:'line', yAxisIndex:2, smooth:true, showSymbol:false,
       lineStyle:{ width:2, color:'#e04141' },
       data: D.tpex_ma },
   ]
@@ -314,6 +333,8 @@ html = (HTML
     .replace("__BASELINE__", baseline)
     .replace("__N__", str(n))
     .replace("__LAST_DATE__", last_date)
+    .replace("__TWSE_IDX__", f"{twse_idx_last:,.2f}" if twse_idx_last is not None else "—")
+    .replace("__TPEX_IDX__", f"{tpex_idx_last:,.2f}" if tpex_idx_last is not None else "—")
     .replace("__TWSE_MA__", f"{twse_latest:.2f}" if twse_latest is not None else "—")
     .replace("__Tpex_MA__", f"{tpex_latest:.2f}" if tpex_latest is not None else "—")
     .replace("__TPEX_MA__", f"{tpex_latest:.2f}" if tpex_latest is not None else "—")
