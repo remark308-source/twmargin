@@ -131,7 +131,7 @@ HTML = r"""<!DOCTYPE html>
 <div class="topbar">
   <div class="title">
     <h1>台股融資淨買入 MA20 × 上市/櫃買加權指數 疊加圖</h1>
-    <div class="sub">區間 __BASELINE__ ｜ 共 __N__ 個交易日 ｜ 源：KGI MoneyDJ 盤後資訊（上市 = TAIEX、櫃買 = TPEx 收盘）</div>
+    <div class="sub">區間 __BASELINE__ ｜ 共 __N__ 個交易日 ｜ 上市 = TAIEX、櫃買 = TPEx 收盘</div>
   </div>
   <div class="actions">
     <span class="toast" id="toast"></span>
