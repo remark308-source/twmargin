@@ -3,6 +3,7 @@ name: Update TW Margin Report
 on:
   schedule:
     # 台北時間（UTC+8）每週一至週五 晚上 21:00 自動更新（= UTC 13:00）
+    # KGI 盤後資訊約 17:00~18:00（台北）更新當日資料，此排程可取到當日
     - cron: "0 13 * * 1-5"
   workflow_dispatch: {}   # 允許手動在 Actions 頁面點 Run workflow
 
@@ -12,7 +13,10 @@ permissions:
 
 jobs:
   build:
-    # 若改用「自託管 runner」確保 TPEx 櫃買資料可達，把下面這行改成： runs-on: self-hosted
+    # 資料源為 KGI MoneyDJ 盤後資訊（kgiweb.moneydj.com），每次執行皆為全量重建
+    # （2 次 HTTP 呼叫，秒級完成）。若 GitHub runner 遭該站封鎖導致取不到資料，
+    # 下方「Verify data freshness」會直接讓此 run 失敗，請改用自託管 runner：
+    #   runs-on: self-hosted
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -25,13 +29,29 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Build data (incremental) + render HTML
+      - name: Build data (KGI full rebuild) + render HTML
         env:
           OUTPUT_HTML: index.html
           TZ: Asia/Taipei
         run: |
           python build_tw.py
           python gen_html_tw.py
+
+      - name: Verify data freshness
+        env:
+          TZ: Asia/Taipei
+        run: |
+          python - <<'EOF'
+          import json
+          from datetime import date, datetime
+          d = json.load(open("chart_data_tw.json", encoding="utf-8"))
+          last = datetime.strptime(d["dates"][-1], "%Y-%m-%d").date()
+          age = (date.today() - last).days
+          print(f"資料末日 = {last}  距今 {age} 天")
+          # 容忍週末 + 連假（4 天）；超過視為資料源異常（如被 KGI 封鎖），讓 run 轉紅
+          if age > 4:
+              raise SystemExit(f"FAIL: 資料過期 {age} 天（末日 {last}），資料源可能被封鎖或改版")
+          EOF
 
       - name: Commit & push if changed
         run: |

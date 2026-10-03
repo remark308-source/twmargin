@@ -131,7 +131,7 @@ HTML = r"""<!DOCTYPE html>
 <div class="topbar">
   <div class="title">
     <h1>台股融資淨買入 MA20 × 上市/櫃買加權指數 疊加圖</h1>
-    <div class="sub">區間 __BASELINE__ ｜ 共 __N__ 個交易日 ｜ 上市 = TAIEX、櫃買 = TPEx 收盘</div>
+    <div class="sub">區間 __BASELINE__ ｜ 共 __N__ 個交易日 ｜ 源：KGI MoneyDJ 盤後資訊（上市 = TAIEX、櫃買 = TPEx 收盘）</div>
   </div>
   <div class="actions">
     <span class="toast" id="toast"></span>
@@ -147,9 +147,9 @@ HTML = r"""<!DOCTYPE html>
     <span class="tag red">桃紅線 = 櫃買融資淨買入 MA20</span>，均為右軸(億元 TWD)。
     上市 MA20 附 0 參考線。<br/>
     下圖——兩市每日融資淨買入柱狀(紅=淨買入/加槓桿，綠=淨償還/去槓桿) + 各自 MA20 折線。<br/>
-    <b>資料口徑：</b>上市加權與櫃買指數走 FinMind <code>TaiwanStockPrice</code> ；
-    上市融資淨買入走 FinMind <code>TaiwanStockTotalMarginPurchaseShortSale</code> 的 <code>MarginPurchaseMoney</code> 字段；
-    櫃買融資淨買入走 TPEx 官網 <code>margin_bal_result.php</code> 的 <code>summary[1][6]</code> 仟元餘額差分。
+    <b>資料口徑：</b>上市/櫃買指數與兩市大盤融資餘額均取自 KGI MoneyDJ 盤後資訊
+    （<a href="https://kgiweb.moneydj.com/b2brwd/page/afterhours/market/0002" target="_blank">嘉實資訊 b2brwd</a>），
+    每日淨買入為融資餘額差分（餘額單位萬元，差分 ÷1e4 = 億元）。
   </div>
 
   <div class="recent">
