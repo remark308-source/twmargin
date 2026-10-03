@@ -147,8 +147,7 @@ HTML = r"""<!DOCTYPE html>
     <span class="tag red">桃紅線 = 櫃買融資淨買入 MA20</span>，均為右軸(億元 TWD)。
     上市 MA20 附 0 參考線。<br/>
     下圖——兩市每日融資淨買入柱狀(紅=淨買入/加槓桿，綠=淨償還/去槓桿) + 各自 MA20 折線。<br/>
-    <b>資料口徑：</b>上市/櫃買指數與兩市大盤融資餘額均取自 KGI MoneyDJ 盤後資訊
-    （<a href="https://kgiweb.moneydj.com/b2brwd/page/afterhours/market/0002" target="_blank">嘉實資訊 b2brwd</a>），
+    <b>資料口徑：</b>上市/櫃買指數與兩市大盤融資餘額均取自盤後資訊，
     每日淨買入為融資餘額差分（餘額單位萬元，差分 ÷1e4 = 億元）。
   </div>
 
